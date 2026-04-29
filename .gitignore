@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data files (Teacher lists and generated reports)
+*.xls
+*.xlsx
+*.csv
+.DS_Store
+
+# Web app artifacts
+attendance-web-app/node_modules/
+attendance-web-app/dist/

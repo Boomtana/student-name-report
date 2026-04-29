@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report Generator</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; background-color: #f4f7f6; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; color: #2c3e50; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #4a5568; }
+        input[type="number"], input[type="date"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; padding: 10px; background: #edf2f7; border-radius: 4px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; }
+        button { background: #4299e1; color: white; border: none; padding: 14px 20px; cursor: pointer; border-radius: 4px; font-size: 16px; width: 100%; font-weight: 600; transition: background 0.2s; margin-top: 10px; }
+        button:hover { background: #3182ce; }
+        button:disabled { background: #a0aec0; cursor: not-allowed; }
+        #status { margin-top: 20px; padding: 12px; border-radius: 4px; display: none; text-align: center; font-weight: 500; }
+        .success { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+        .error { background: #fed7d7; color: #822727; border: 1px solid #feb2b2; }
+        .info { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Attendance Generator</h1>
+        <p style="text-align: center; color: #718096; margin-bottom: 30px;">Convert student lists to attendance sheets instantly.</p>
+        
+        <form id="attendanceForm">
+            <div class="form-group">
+                <label for="file">Student List (.xls / .xlsx)</label>
+                <input type="file" id="file" name="file" accept=".xls,.xlsx" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="periods">Number of Class Periods</label>
+                <input type="number" id="periods" name="periods" min="1" value="20" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Days of the Week</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="0"> Mon</div>
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="1"> Tue</div>
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="2"> Wed</div>
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="3"> Thu</div>
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="4"> Fri</div>
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="5"> Sat</div>
+                    <div class="checkbox-item"><input type="checkbox" name="days" value="6"> Sun</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" name="startDate" required>
+            </div>
+            
+            <button type="submit" id="submitBtn">Generate & Download Report</button>
+        </form>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('attendanceForm');
+        const status = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('file');
+            const periods = parseInt(document.getElementById('periods').value);
+            const daysOfWeek = Array.from(form.querySelectorAll('input[name="days"]:checked')).map(cb => parseInt(cb.value));
+            const startDateStr = document.getElementById('startDate').value;
+
+            if (daysOfWeek.length === 0) {
+                showStatus('Please select at least one day of the week.', 'error');
+                return;
+            }
+
+            if (!fileInput.files[0]) {
+                showStatus('Please select a file.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            showStatus('Processing... your file is being generated locally.', 'info');
+
+            try {
+                const file = fileInput.files[0];
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Convert worksheet to JSON (2D array)
+                const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                // Extraction Logic (Replicating Python)
+                // Rows start at index 9 (row 10)
+                // Columns B (1), E (4), H (7)
+                const extractedData = rows.slice(9)
+                    .filter(row => row[1] || row[4] || row[7])
+                    .map(row => [
+                        row[1] || '', // No.
+                        row[4] || '', // Student ID
+                        row[7] || ''  // Name-Surname
+                    ]);
+
+                if (extractedData.length === 0) {
+                    throw new Error("No student data found in the expected format (Row 10+, Columns B, E, H).");
+                }
+
+                // Date Calculation
+                const dates = [];
+                let currentDate = new Date(startDateStr);
+                while (dates.length < periods) {
+                    // JS getDay(): 0=Sun, 1=Mon...6=Sat
+                    // My UI: 0=Mon, 1=Tue...6=Sun
+                    const jsDay = currentDate.getDay();
+                    const mappedDay = jsDay === 0 ? 6 : jsDay - 1;
+                    
+                    if (daysOfWeek.includes(mappedDay)) {
+                        const day = String(currentDate.getDate()).padStart(2, '0');
+                        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                        const year = String(currentDate.getFullYear()).slice(-2);
+                        dates.push(`${day}/${month}/${year}`);
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                // Construct full report
+                const periodHeader = ['No.', 'Student ID', 'Name-Surname'];
+                for (let i = 1; i <= periods; i++) {
+                    periodHeader.push(i.toString());
+                }
+                const dateHeader = ['', '', 'Date', ...dates];
+                const finalGrid = [periodHeader, dateHeader, ...extractedData];
+
+                // Create new Workbook
+                const newWb = XLSX.utils.book_new();
+                const newWs = XLSX.utils.aoa_to_sheet(finalGrid);
+                XLSX.utils.book_append_sheet(newWb, newWs, 'Attendance');
+
+                // Trigger Download
+                const originalName = file.name.replace(/\.[^/.]+$/, "");
+                XLSX.writeFile(newWb, `${originalName}_reportfile.xlsx`);
+
+                showStatus('Success! Your report has been generated and downloaded.', 'success');
+            } catch (err) {
+                console.error(err);
+                showStatus('Error: ' + err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        };
+
+        function showStatus(msg, type) {
+            status.textContent = msg;
+            status.className = type;
+            status.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
