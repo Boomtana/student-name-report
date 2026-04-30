@@ -26,35 +26,36 @@
 </head>
 <body>
     <div class="card">
-        <h1>Attendance Generator</h1>
-        <p style="text-align: center; color: #718096; margin-bottom: 30px;">Convert student lists to attendance sheets instantly.</p>
+        <h1>Student Attendance <br>
+            Generator
+        </h1>
+        <p style="text-align: center; color: #718096; margin-bottom: 30px;"> สร้างใบเช็คชื่อนักเรียนด้วย 5 คลิก </p>
         
         <form id="attendanceForm">
             <div class="form-group">
-                <label for="file">Student List (.xls / .xlsx)</label>
+                <label for="file">ใบรายชื่อนักเรียน (.xls / .xlsx)</label>
                 <input type="file" id="file" name="file" accept=".xls,.xlsx" required>
             </div>
             
             <div class="form-group">
-                <label for="periods">Number of Class Periods</label>
+                <label for="periods">จำนวนคาบต่อภาคเรียน </label>
                 <input type="number" id="periods" name="periods" min="1" value="20" required>
             </div>
             
             <div class="form-group">
-                <label>Days of the Week</label>
+                <label>วันที่สอน </label>
                 <div class="checkbox-group">
                     <div class="checkbox-item"><input type="checkbox" name="days" value="0"> Mon</div>
                     <div class="checkbox-item"><input type="checkbox" name="days" value="1"> Tue</div>
                     <div class="checkbox-item"><input type="checkbox" name="days" value="2"> Wed</div>
                     <div class="checkbox-item"><input type="checkbox" name="days" value="3"> Thu</div>
                     <div class="checkbox-item"><input type="checkbox" name="days" value="4"> Fri</div>
-                    <div class="checkbox-item"><input type="checkbox" name="days" value="5"> Sat</div>
-                    <div class="checkbox-item"><input type="checkbox" name="days" value="6"> Sun</div>
+                    
                 </div>
             </div>
             
             <div class="form-group">
-                <label for="startDate">Start Date</label>
+                <label for="startDate"> ทำการเรียนการสอนวันแรก </label>
                 <input type="date" id="startDate" name="startDate" required>
             </div>
             
