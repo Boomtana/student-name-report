@@ -68,11 +68,26 @@
         <footer style="margin-top: 40px; text-align: center; color: #718096; font-size: 14px;">
             <p>ติดต่อ: Tanakorn Klangphapan</p>
             <p><a href="https://www.facebook.com/TanakornBorBor" target="_blank" style="color: #4299e1; text-decoration: none;">Facebook: TanakornBorBor</a></p>
-            <button onclick="alert('ขอบคุณที่สนับสนุนกาแฟค้าบบ! ☕️')" style="background: #f6ad55; margin-top: 15px;">เลี้ยงกาแฟหน่อยค้าบบ</button>
+            <button onclick="showModal()" style="background: #f6ad55; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <img src="https://cdn-icons-png.flaticon.com/512/924/924514.png" style="width: 20px; height: 20px;">
+                เลี้ยงกาแฟหน่อยค้าบบ
+            </button>
         </footer>
     </div>
 
+    <!-- Modal -->
+    <div id="coffeeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:white; padding:20px; border-radius:8px; text-align:center; max-width: 300px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/2936/2936682.png" style="width: 100px; margin-bottom: 15px;">
+            <p>ขอบคุณที่สนับสนุนกาแฟค้าบบ! ☕️</p>
+            <button onclick="hideModal()" style="background:#4299e1;">ปิด</button>
+        </div>
+    </div>
+
     <script>
+        function showModal() { document.getElementById('coffeeModal').style.display = 'flex'; }
+        function hideModal() { document.getElementById('coffeeModal').style.display = 'none'; }
+        
         const form = document.getElementById('attendanceForm');
         const status = document.getElementById('status');
         const submitBtn = document.getElementById('submitBtn');
